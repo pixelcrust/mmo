@@ -7,7 +7,20 @@ import (
 	"server/pkg/packets"
 )
 
-// A structure for the connected client to interface with the hub
+// A structure for a state machine to process the client's messages
+type ClientStateHandler interface {
+	Name() string
+
+	// Inject the client into the state handler
+	SetClient(client ClientInterfacer)
+
+	OnEnter()
+	HandleMessage(senderId uint64, message packets.Msg)
+
+	// Cleanup the state handler and perform any last actions
+	OnExit()
+}
+
 type ClientInterfacer interface {
 	Id() uint64
 	ProcessMessage(senderId uint64, message packets.Msg)
@@ -15,10 +28,12 @@ type ClientInterfacer interface {
 	// Sets the client's ID and anything else that needs to be initialized
 	Initialize(id uint64)
 
-	// Puts data from this client in the write pump
+	SetState(newState ClientStateHandler)
+
+	// Puts data from this client into the write pump
 	SocketSend(message packets.Msg)
 
-	// Puts data from another client in the write pump
+	// Puts data from another client into the write pump
 	SocketSendAs(message packets.Msg, senderId uint64)
 
 	// Forward message to another client for processing
@@ -44,10 +59,10 @@ type Hub struct {
 	// Packets in this channel will be processed by all connected clients except the sender
 	BroadcastChan chan *packets.Packet
 
-	// Clients in this channel will be registered with the hub
+	// Clients in this channel will be registered to the hub
 	RegisterChan chan ClientInterfacer
 
-	// Clients in this channel will be unregistered with the hub
+	// Clients in this channel will be unregistered from the hub
 	UnregisterChan chan ClientInterfacer
 }
 
@@ -61,7 +76,7 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Run() {
-	log.Println("Awaiting client registrations...")
+	log.Println("Awaiting client registrations")
 	for {
 		select {
 		case client := <-h.RegisterChan:
@@ -78,7 +93,6 @@ func (h *Hub) Run() {
 	}
 }
 
-// Creates a client for the new connection and begins the concurrent read and write pumps
 func (h *Hub) Serve(getNewClient func(*Hub, http.ResponseWriter, *http.Request) (ClientInterfacer, error), writer http.ResponseWriter, request *http.Request) {
 	log.Println("New client connected from", request.RemoteAddr)
 	client, err := getNewClient(h, writer, request)
