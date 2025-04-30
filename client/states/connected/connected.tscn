@@ -39,6 +39,7 @@ text = "Register
 "
 
 [node name="Log" type="RichTextLabel" parent="UI/VBoxContainer"]
+custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 script = ExtResource("2_kh2bm")
 metadata/_custom_type_script = "uid://d1gc507ex1fn4"
