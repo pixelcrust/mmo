@@ -45,6 +45,11 @@ func (h *Hub) NewDbTx() *DbTx {
 	}
 }
 
+type SharedGameObjects struct {
+	// The ID of the player is the ID of the client
+	Players *objects.SharedCollection[*objects.Player]
+}
+
 type ClientInterfacer interface {
 	Id() uint64
 	ProcessMessage(senderId uint64, message packets.Msg)
@@ -72,11 +77,13 @@ type ClientInterfacer interface {
 	// Pump data from the client directly to the connected socket
 	WritePump()
 
-	// Close the client's connections and cleanup
-	Close(reason string)
-
 	// A reference to the database transaction context for this client
 	DbTx() *DbTx
+
+	SharedGameObjects() *SharedGameObjects
+
+	// Close the client's connections and cleanup
+	Close(reason string)
 }
 
 // The hub is the central point of communication between all connected clients
@@ -94,19 +101,25 @@ type Hub struct {
 
 	// Database connection pool
 	dbPool *sql.DB
+
+	SharedGameObjects *SharedGameObjects
 }
 
 func NewHub() *Hub {
 	dbPool, err := sql.Open("sqlite", "db.sqlite")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error opening database: %v", err)
 	}
+
 	return &Hub{
 		Clients:        objects.NewSharedCollection[ClientInterfacer](),
 		BroadcastChan:  make(chan *packets.Packet),
 		RegisterChan:   make(chan ClientInterfacer),
 		UnregisterChan: make(chan ClientInterfacer),
 		dbPool:         dbPool,
+		SharedGameObjects: &SharedGameObjects{
+			Players: objects.NewSharedCollection[*objects.Player](),
+		},
 	}
 }
 
