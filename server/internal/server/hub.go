@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"log"
+	"math/rand/v2"
 	"net/http"
 	"server/internal/server/db"
 	"server/internal/server/objects"
@@ -17,6 +18,8 @@ import (
 //
 //go:embed db/config/schema.sql
 var schemaGenSql string
+
+const MaxSpores int = 1000
 
 // A structure for a state machine to process the client's messages
 type ClientStateHandler interface {
@@ -48,6 +51,7 @@ func (h *Hub) NewDbTx() *DbTx {
 type SharedGameObjects struct {
 	// The ID of the player is the ID of the client
 	Players *objects.SharedCollection[*objects.Player]
+	Spores  *objects.SharedCollection[*objects.Spore]
 }
 
 type ClientInterfacer interface {
@@ -119,6 +123,7 @@ func NewHub() *Hub {
 		dbPool:         dbPool,
 		SharedGameObjects: &SharedGameObjects{
 			Players: objects.NewSharedCollection[*objects.Player](),
+			Spores:  objects.NewSharedCollection[*objects.Spore](),
 		},
 	}
 }
@@ -128,6 +133,12 @@ func (h *Hub) Run() {
 	if _, err := h.dbPool.ExecContext(context.Background(), schemaGenSql); err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println("Placing spores...")
+	for i := 0; i < MaxSpores; i++ {
+		h.SharedGameObjects.Spores.Add(h.newSpore())
+	}
+
 	log.Println("Awaiting client registrations")
 	for {
 		select {
@@ -158,4 +169,10 @@ func (h *Hub) Serve(getNewClient func(*Hub, http.ResponseWriter, *http.Request) 
 
 	go client.WritePump()
 	go client.ReadPump()
+}
+
+func (h *Hub) newSpore() *objects.Spore {
+	sporeRadius := max(rand.NormFloat64()*3+10, 5)
+	x, y := objects.SpawnCoords()
+	return &objects.Spore{X: x, Y: y, Radius: sporeRadius}
 }
