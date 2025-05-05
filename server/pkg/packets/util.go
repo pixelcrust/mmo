@@ -59,15 +59,16 @@ func newSporeMessage(spore_id uint64, spore *objects.Spore) *SporeMessage {
 
 func NewSpore(id uint64, spore *objects.Spore) Msg {
 	return &Packet_Spore{
-		Spore: newSporeMessage(id, spore),
+		newSporeMessage(id, spore),
 	}
 }
 
 func NewSporesBatch(spores map[uint64]*objects.Spore) Msg {
-	sporesMessages := make([]*SporeMessage, 0, len(spores))
+	sporesMessages := make([]*SporeMessage, len(spores))
 	for id, spore := range spores {
 		sporesMessages = append(sporesMessages, newSporeMessage(id, spore))
 	}
+
 	return &Packet_SporesBatch{
 		SporesBatch: &SporesBatchMessage{
 			Spores: sporesMessages,

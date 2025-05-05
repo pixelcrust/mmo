@@ -14,28 +14,11 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// Embed the database schema to be used when creating the database tables
-//
+const MaxSpores = 1000
+
 //go:embed db/config/schema.sql
 var schemaGenSql string
 
-const MaxSpores int = 1000
-
-// A structure for a state machine to process the client's messages
-type ClientStateHandler interface {
-	Name() string
-
-	// Inject the client into the state handler
-	SetClient(client ClientInterfacer)
-
-	OnEnter()
-	HandleMessage(senderId uint64, message packets.Msg)
-
-	// Cleanup the state handler and perform any last actions
-	OnExit()
-}
-
-// A structure for database transaction context
 type DbTx struct {
 	Ctx     context.Context
 	Queries *db.Queries
@@ -49,9 +32,23 @@ func (h *Hub) NewDbTx() *DbTx {
 }
 
 type SharedGameObjects struct {
-	// The ID of the player is the ID of the client
+	// The ID of the player is the ID of the client that owns it
 	Players *objects.SharedCollection[*objects.Player]
 	Spores  *objects.SharedCollection[*objects.Spore]
+}
+
+// A structure for a state machine to process the client's messages
+type ClientStateHandler interface {
+	Name() string
+
+	// Inject the client into the state handler
+	SetClient(client ClientInterfacer)
+
+	OnEnter()
+	HandleMessage(senderId uint64, message packets.Msg)
+
+	// Cleanup the state handler and perform any last actions
+	OnExit()
 }
 
 type ClientInterfacer interface {
@@ -131,7 +128,7 @@ func NewHub() *Hub {
 func (h *Hub) Run() {
 	log.Println("Initializing database...")
 	if _, err := h.dbPool.ExecContext(context.Background(), schemaGenSql); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error initializing database: %v", err)
 	}
 
 	log.Println("Placing spores...")
@@ -172,7 +169,7 @@ func (h *Hub) Serve(getNewClient func(*Hub, http.ResponseWriter, *http.Request) 
 }
 
 func (h *Hub) newSpore() *objects.Spore {
-	sporeRadius := max(rand.NormFloat64()*3+10, 5)
+	sporeRadius := max(10+rand.NormFloat64()*3, 5)
 	x, y := objects.SpawnCoords()
 	return &objects.Spore{X: x, Y: y, Radius: sporeRadius}
 }
