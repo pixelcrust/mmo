@@ -5,6 +5,9 @@ const packets := preload("res://packets.gd")
 const Scene := preload("res://objects/actor/actor.tscn")
 const Actor := preload("res://objects/actor/actor.gd")
 
+@onready var area_hitbox: Area2D = $area_hitbox
+@onready var area_walking: Area2D = $area_walking
+
 var actor_id: int
 var actor_name: String
 var start_x: float
@@ -12,7 +15,6 @@ var start_y: float
 var start_rad: float
 var speed: float
 var is_player: bool
-
 var velocity: Vector2
 var radius: float:
 	set(new_radius):

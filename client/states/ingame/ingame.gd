@@ -2,6 +2,7 @@ extends Node
 
 const packets := preload("res://packets.gd")
 
+const Player := preload("res://objects/player/player.gd")
 const Actor := preload("res://objects/actor/actor.gd")
 const Spore := preload("res://objects/spore/spore.gd")
 
@@ -70,12 +71,12 @@ func _handle_player_msg(sender_id: int, player_msg: packets.PlayerMessage) -> vo
 
 func _add_actor(actor_id: int, actor_name: String, x: float, y: float, radius: float, speed: float, is_player: bool) -> void:
 	# This is a new player, so we need to create a new actor
-	var actor := Actor.instantiate(actor_id, actor_name, x, y, radius, speed, is_player)
-	_world.add_child(actor)
-	_players[actor_id] = actor
+	var player := Player.instantiate(actor_id, actor_name, x, y, speed, is_player)
+	_world.add_child(player)
+	_players[actor_id] = player
 	
 	if is_player:
-		actor.area_entered.connect(_on_player_area_entered)
+		player.area_entered.connect(_on_player_area_entered)
 	
 func _update_player(actor_id: int, actor_name: String, x: float, y: float, direction: float, radius: float, speed: float, is_player: bool) -> void:
 	# This is an existing player, so we need to update their position
@@ -106,10 +107,11 @@ func _handle_spores_batch_msg(sender_id: int, spores_batch_msg: packets.SporesBa
 		_handle_spore_msg(sender_id, spore_msg)
 
 func _on_player_area_entered(area: Area2D) -> void:
-	if area is Spore:
+	"""if area is Spore:
 		_consume_spore(area as Spore)
 	elif area is Actor:
-		_collide_actor(area as Actor)
+		_collide_actor(area as Actor)"""
+	pass
 		
 func _consume_spore(spore: Spore) -> void:
 	var player = _players[GameManager.client_id]

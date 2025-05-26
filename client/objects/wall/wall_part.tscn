@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://bf3rxsrq0i7kl"]
+
+[ext_resource type="Texture2D" uid="uid://pgsuv6s51gd1" path="res://resources/spr_kiste_0.png" id="1_itkhw"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_umiti"]
+size = Vector2(66, 28)
+
+[node name="WallPart" type="Area2D"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-3, 40)
+shape = SubResource("RectangleShape2D_umiti")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(3, 3)
+texture = ExtResource("1_itkhw")

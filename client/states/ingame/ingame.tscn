@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://cp0qidx5j6inj"]
+[gd_scene load_steps=6 format=3 uid="uid://cp0qidx5j6inj"]
 
 [ext_resource type="Script" uid="uid://crcmrhsnosfks" path="res://states/ingame/ingame.gd" id="1_b7vyf"]
 [ext_resource type="Script" uid="uid://d1gc507ex1fn4" path="res://classes/log/log.gd" id="2_0uskn"]
 [ext_resource type="Texture2D" uid="uid://sgepug5ybx1l" path="res://resources/bg.png" id="3_q22go"]
+[ext_resource type="PackedScene" uid="uid://bf3rxsrq0i7kl" path="res://objects/wall/wall_part.tscn" id="4_wuwgw"]
+[ext_resource type="PackedScene" uid="uid://bto5ganclkwbs" path="res://objects/player/player.tscn" id="5_ll2wp"]
 
 [node name="Ingame" type="Node"]
 script = ExtResource("1_b7vyf")
@@ -33,3 +35,15 @@ texture_repeat = 2
 texture = ExtResource("3_q22go")
 region_enabled = true
 region_rect = Rect2(0, 0, 10000, 10000)
+
+[node name="WallPart" parent="World" instance=ExtResource("4_wuwgw")]
+position = Vector2(-1196, -754)
+
+[node name="WallPart2" parent="World" instance=ExtResource("4_wuwgw")]
+position = Vector2(-855, -895)
+
+[node name="Player" parent="." instance=ExtResource("5_ll2wp")]
+position = Vector2(-1026, -852)
+speed = null
+friction = null
+acceleration = null
